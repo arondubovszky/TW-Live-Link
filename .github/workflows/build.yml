@@ -1,0 +1,51 @@
+# Builds the TW Live Link app and its installer from exactly this code, on GitHub's own machines.
+# Every run shows the SHA-256 fingerprints of what it built (see the run's summary) and keeps the files
+# for download (Artifacts), so anyone with access can compare them with the installer people use.
+name: Build TW Live Link
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+
+      - name: Tools for the Windows icon/version resources and the installer
+        run: sudo apt-get update && sudo apt-get install -y binutils-mingw-w64-x86-64 nsis
+
+      - name: Tests
+        run: go test ./...
+
+      - name: Build the app (Windows)
+        run: |
+          (cd res && x86_64-w64-mingw32-windres --preprocessor=cat -O coff -o ../rsrc_windows_amd64.syso app.rc)
+          mkdir -p build
+          GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H windowsgui -s -w" -o "build/TW Live Link.exe" .
+
+      - name: Build the installer
+        run: makensis -V1 installer.nsi
+
+      - name: Fingerprints
+        run: |
+          echo "## SHA-256 fingerprints" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          (cd build && sha256sum "TW Live Link.exe" TW-Live-Link-Setup.exe) | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TW-Live-Link
+          path: |
+            build/TW Live Link.exe
+            build/TW-Live-Link-Setup.exe

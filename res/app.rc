@@ -1,0 +1,27 @@
+1 ICON "app.ico"
+2 ICON "live.ico"
+1 24 "app.manifest"
+1 VERSIONINFO
+FILEVERSION 1,5,0,0
+PRODUCTVERSION 1,5,0,0
+FILEOS 0x40004
+FILETYPE 0x1
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "Team Wars"
+      VALUE "FileDescription", "TW Live Link"
+      VALUE "FileVersion", "1.5.0"
+      VALUE "ProductName", "TW Live Link"
+      VALUE "ProductVersion", "1.5.0"
+      VALUE "OriginalFilename", "TW Live Link.exe"
+      VALUE "LegalCopyright", "Team Wars"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

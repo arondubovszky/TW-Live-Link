@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TW Live Link</title>
+<link rel="icon" type="image/x-icon" sizes="16x16 20x20 24x24 32x32 48x48 64x64 256x256" href="/favicon.ico">
+<style>
+:root{--bg:#060d1b;--panel:#0c1628;--panel2:#111e35;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.12);--text:#F2F6FF;--muted:#8796B4;--dim:#4f5d79;
+  --pink:#FF2587;--orange:#FF743F;--cyan:#3CC8F0;--good:#2EDB8A;--warn:#FFC83D;--bad:#FF5A7A;--live:#FF2D55;--grad:linear-gradient(100deg,#FF743F,#FF2587);
+  --disp:"Bahnschrift","Barlow Condensed","DIN Alternate","Arial Narrow",sans-serif;--body:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;color-scheme:dark;}
+*{box-sizing:border-box;}
+html{background:var(--bg);height:100%;}
+body{margin:0;min-height:100%;color:var(--text);font:500 14px/1.4 var(--body);user-select:none;-webkit-font-smoothing:antialiased;overflow-y:auto;overflow-x:hidden;
+  background:radial-gradient(560px 320px at 0% -10%, rgba(255,37,135,.14), transparent 62%), radial-gradient(520px 300px at 100% -8%, rgba(60,200,240,.08), transparent 60%), var(--bg);}
+body::-webkit-scrollbar{width:8px;} body::-webkit-scrollbar-thumb{background:#1d2c4a;border-radius:8px;border:2px solid var(--bg);}
+main{max-width:470px;margin:0 auto;padding:14px 14px 16px;}
+button{font:inherit;color:inherit;cursor:pointer;}
+.hidden{display:none !important;}
+.disp{font-family:var(--disp);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.02em;}
+
+/* header */
+header{display:flex;align-items:center;gap:10px;height:38px;}
+header img{height:32px;width:auto;}
+header h1{margin:0;font-size:22px;line-height:1;}
+header h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.08em;}
+.gear{margin-left:auto;width:34px;height:34px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center;color:var(--muted);transition:background .2s,color .2s,transform .5s cubic-bezier(.34,1.56,.64,1);}
+.gear:hover{background:var(--panel2);color:var(--text);transform:rotate(60deg);} .gear svg{width:19px;height:19px;}
+
+.upd{display:flex;align-items:center;gap:10px;margin-top:10px;padding:7px 7px 7px 12px;border-radius:8px;background:linear-gradient(100deg,rgba(255,116,63,.15),rgba(255,37,135,.15));border:1px solid rgba(255,37,135,.35);}
+.upd span{flex:1;font-weight:600;}
+.btn{border-radius:6px;padding:8px 14px;font-weight:700;background:var(--panel2);border:1px solid var(--line2);transition:filter .15s, transform .15s;}
+.btn:hover{filter:brightness(1.15);} .btn:active{transform:scale(.97);}
+.btn.hot{background:var(--grad);border-color:transparent;color:#fff;}
+
+/* ===== the stage: what's going on, big ===== */
+.stage{position:relative;margin-top:12px;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#0f1b31,#0a1324 60%,#08101f);border:1px solid var(--line);isolation:isolate;--c:var(--muted);}
+.stage::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--c);transition:background .5s;z-index:2;}
+/* speed lines: drift when data flows, race when live */
+.lines{position:absolute;top:-20%;bottom:-20%;left:-24px;right:-184px;z-index:-1;opacity:.0;transition:opacity .8s;
+  background:repeating-linear-gradient(104deg, transparent 0 34px, rgba(255,255,255,.035) 34px 36px, transparent 36px 69px, rgba(255,255,255,.02) 69px 70px);
+  animation:drift 6s linear infinite;animation-play-state:paused;}
+.stage.flow .lines{opacity:1;animation-play-state:running;}
+.stage.live .lines{animation-duration:1.4s;background:repeating-linear-gradient(104deg, transparent 0 34px, rgba(255,45,85,.06) 34px 36px, transparent 36px 69px, rgba(255,255,255,.03) 69px 70px);}
+/* one loop = exactly two repeats of the stripe pattern (70 px along the 104deg gradient = 72.14 px across), so the
+   end of a loop is identical to its start: no jump. The layer reaches far enough right that it always covers. */
+@keyframes drift{to{transform:translateX(-144.286px);}}
+.stage .glow{position:absolute;width:260px;height:260px;right:-80px;top:-110px;border-radius:50%;background:radial-gradient(circle, var(--c), transparent 65%);opacity:.12;z-index:-1;transition:background .5s, opacity .5s;}
+.stage.live .glow{opacity:.22;}
+.st-top{display:flex;align-items:center;gap:14px;padding:18px;}
+.stage.flow .st-top{padding-bottom:0;}
+/* the beacon: still when idle, radio waves when live */
+.beacon{position:relative;width:54px;height:54px;flex:none;}
+.beacon b{position:absolute;inset:17px;border-radius:50%;background:var(--c);box-shadow:0 0 18px var(--c);transition:background .5s, box-shadow .5s;}
+.beacon i{position:absolute;inset:0;border-radius:50%;border:2px solid var(--c);opacity:.22;transition:border-color .5s;}
+.stage.live .beacon i{animation:wave 2.1s cubic-bezier(.15,.6,.3,1) infinite;opacity:0;}
+.stage.live .beacon i:nth-child(2){animation-delay:.7s;} .stage.live .beacon i:nth-child(3){animation-delay:1.4s;}
+.stage.live .beacon b{animation:beat 1.05s ease-in-out infinite;}
+.stage.wait .beacon b{animation:breathe 1.8s ease-in-out infinite;}
+@keyframes wave{0%{transform:scale(.35);opacity:.9;}100%{transform:scale(1.25);opacity:0;}}
+@keyframes beat{0%,100%{transform:scale(1);}50%{transform:scale(.82);}}
+@keyframes breathe{50%{opacity:.45;}}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:3px 12px 3px 10px;transform:skewX(-14deg);background:var(--c);color:#06101f;transition:background .5s;}
+.badge > span{transform:skewX(14deg);display:inline-flex;align-items:center;gap:7px;font:800 italic 13px/1.3 var(--disp);letter-spacing:.12em;}
+.stage.live .badge{background:var(--live);color:#fff;box-shadow:0 0 18px rgba(255,45,85,.45);}
+.stage.live .badge > span::before{content:"";width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.05s steps(2,start) infinite;}
+@keyframes blink{50%{opacity:.25;}}
+.st-title{margin:6px 0 0;font-size:30px;line-height:1;}
+.st-sub{margin:4px 0 0;color:var(--muted);font-weight:600;}
+.stage.live{--c:var(--live);} .stage.ready{--c:var(--cyan);} .stage.wait{--c:var(--warn);} .stage.bad{--c:var(--bad);}
+
+/* your car, live from Forza */
+.dash{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:end;margin:16px 18px 0;padding:12px 14px;border-radius:10px;background:rgba(4,9,19,.55);border:1px solid var(--line);transition:opacity .5s;}
+.stage:not(.flow) .dash{opacity:.35;}
+.spd b{display:block;font:800 italic 44px/0.9 var(--disp);letter-spacing:-.01em;font-variant-numeric:tabular-nums;min-width:92px;}
+.spd small{color:var(--muted);font:700 11px var(--body);letter-spacing:.12em;}
+.revs{align-self:center;}
+.revs .seg{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;}
+.revs .seg i{height:7px;border-radius:2px;background:#1a2741;transition:background .08s;}
+.revs .seg i.on{background:var(--good);} .revs .seg i.on.y{background:var(--warn);} .revs .seg i.on.r{background:var(--bad);}
+.revs .ped{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+.revs .ped span{height:5px;border-radius:3px;background:#1a2741;overflow:hidden;}
+.revs .ped span i{display:block;height:100%;width:0;border-radius:3px;transition:width .1s linear;}
+.revs .ped .t i{background:var(--good);} .revs .ped .b i{background:var(--bad);}
+.revs .lbl{display:flex;justify-content:space-between;margin-top:4px;color:var(--dim);font:700 10px var(--body);letter-spacing:.1em;}
+.gearbox{width:50px;height:54px;display:grid;place-items:center;border-radius:8px;background:var(--panel2);border:1px solid var(--line2);font:800 italic 30px/1 var(--disp);}
+/* the data stream: Forza -> live view */
+.flowrow{display:flex;align-items:center;gap:10px;margin:12px 18px 16px;color:var(--muted);font:700 12px var(--body);}
+.pipe{position:relative;flex:1;height:6px;border-radius:6px;background:#121e35;overflow:hidden;}
+.pipe::before{content:"";position:absolute;left:0;right:0;top:1px;height:4px;opacity:0;transition:opacity .4s;
+  background:repeating-linear-gradient(90deg, var(--c) 0 14px, transparent 14px 48px);background-size:48px 100%;
+  -webkit-mask:linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);mask:linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  animation:stream 1.1s linear infinite;animation-play-state:paused;}
+.stage.flow .pipe::before{opacity:1;animation-play-state:running;}
+.stage.live .pipe::before{animation-duration:.55s;filter:drop-shadow(0 0 4px var(--live));}
+@keyframes stream{from{background-position:0 0;}to{background-position:48px 0;}}
+.flowrow .rate{min-width:56px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums;}
+
+/* ===== you: a driver bar like a row in the live view ===== */
+.driver{position:relative;display:flex;align-items:center;gap:12px;margin-top:10px;padding:10px 12px 10px 18px;border-radius:10px;background:var(--panel);border:1px solid var(--line);overflow:hidden;}
+.driver::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--tc,var(--pink));}
+.driver::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg, color-mix(in srgb, var(--tc,var(--pink)) 16%, transparent), transparent 55%);pointer-events:none;}
+.driver img{width:38px;height:38px;object-fit:contain;position:relative;z-index:1;}
+.driver .who{position:relative;z-index:1;min-width:0;}
+.driver .nm{font-size:22px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:.25em;}   /* room for the italic lean of the last letter (Windows leans Bahnschrift itself: about .2em) */
+.driver .tm{color:var(--muted);font-weight:700;font-size:12.5px;}
+.ghost{margin-left:auto;position:relative;z-index:1;background:transparent;border:1px solid var(--line2);border-radius:6px;padding:6px 12px;font-weight:700;color:var(--muted);transition:color .15s,border-color .15s;}
+.ghost:hover{color:var(--text);border-color:rgba(255,255,255,.25);}
+
+/* ===== getting ready: only while something still needs doing ===== */
+.ready{margin-top:10px;border-radius:12px;background:var(--panel);border:1px solid var(--line);overflow:hidden;}
+.rhead{display:flex;align-items:center;gap:10px;padding:12px 14px 4px;}
+.rhead b{font-size:17px;} .rhead span{margin-left:auto;color:var(--muted);font-weight:700;font-size:12.5px;}
+.item{border-top:1px solid var(--line);}
+.item:first-of-type{border-top:0;}
+.irow{display:flex;align-items:center;gap:12px;padding:11px 14px;}
+.tick{width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font:800 12px var(--body);border:2px solid var(--line2);color:var(--muted);transition:background .3s, border-color .3s;}
+.item.done .tick{background:var(--good);border-color:var(--good);color:#04130b;}
+.item.done .tick span{display:none;} .item.done .tick::after{content:"";width:6px;height:11px;border:solid #04130b;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg);}
+.item.now .tick{border-color:var(--pink);color:var(--text);}
+.irow .t{flex:1;font-weight:700;} .irow .t small{display:block;color:var(--muted);font-weight:600;font-size:12.5px;}
+.ibody{padding:0 14px 14px 50px;}
+/* team grid and name list */
+.teams{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.tile{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 6px;border-radius:8px;border:1px solid var(--line);background:rgba(4,9,19,.5);transition:border-color .15s, background .15s, transform .15s;}
+.tile:hover{border-color:var(--line2);background:var(--panel2);transform:translateY(-1px);}
+.tile img{width:28px;height:28px;object-fit:contain;}
+.tile span{font:700 10.5px var(--body);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;}
+.back{background:none;border:0;color:var(--muted);padding:4px 6px 4px 2px;border-radius:6px;display:inline-flex;align-items:center;gap:6px;font-weight:700;}
+.back:hover{color:var(--text);} .back img{width:20px;height:20px;object-fit:contain;}
+.search{position:relative;margin-top:6px;}
+.search input{width:100%;padding:10px 12px 10px 36px;border-radius:8px;border:1px solid var(--line2);background:rgba(4,9,19,.8);color:var(--text);font:600 15px var(--body);outline:none;transition:border-color .15s, box-shadow .15s;}
+.search input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,37,135,.18);}
+.search svg{position:absolute;left:11px;top:50%;width:16px;height:16px;margin-top:-8px;color:var(--muted);}
+.list{margin-top:6px;max-height:196px;overflow-y:auto;overscroll-behavior:contain;}
+.list::-webkit-scrollbar{width:6px;} .list::-webkit-scrollbar-thumb{background:#1d2c4a;border-radius:6px;}
+.opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:7px;background:transparent;font-weight:600;font-size:14.5px;}
+.opt.hl{background:var(--panel2);} .opt mark{background:none;color:var(--pink);font-weight:800;}
+.opt.new{color:var(--muted);} .opt.new b{color:var(--text);}
+.opt .av{width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font:800 11px var(--body);background:var(--panel2);color:var(--muted);}
+.empty{color:var(--muted);padding:8px 10px;font-weight:600;}
+/* forza steps */
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:7px;font-weight:600;}
+.path{display:inline-block;padding:1px 7px;border-radius:5px;background:var(--panel2);border:1px solid var(--line2);font-weight:700;}
+.vals{display:grid;grid-template-columns:1fr auto auto;gap:6px 10px;align-items:center;margin-top:8px;padding:10px 12px;border-radius:8px;background:rgba(4,9,19,.55);border:1px solid var(--line);}
+.vals span{color:var(--muted);font-weight:600;}
+.vals b{font:800 italic 20px/1 var(--disp);letter-spacing:.02em;user-select:text;}
+.copy{border:1px solid var(--line2);background:transparent;border-radius:6px;padding:3px 8px;color:var(--muted);font:700 11.5px var(--body);transition:color .15s, border-color .15s;}
+.copy:hover{color:var(--text);} .copy.done{color:var(--good);border-color:rgba(46,219,138,.4);}
+.busy{display:grid;gap:6px;margin-bottom:10px;padding:10px 12px;border-radius:8px;background:rgba(255,90,122,.1);border:1px solid rgba(255,90,122,.35);font-weight:600;}
+.busy span{color:var(--muted);font-size:12.5px;} .busy .btn{justify-self:start;margin-top:2px;}
+
+/* other apps */
+.apps{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 14px;border-radius:10px;background:var(--panel);border:1px solid var(--line);}
+.apps .t{flex:1;font-weight:700;} .apps small{color:var(--muted);font-weight:600;}
+.sw{position:relative;width:40px;height:23px;flex:none;}
+.sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
+.sw span{position:absolute;inset:0;border-radius:999px;background:#25334f;transition:background .2s;}
+.sw span::after{content:"";position:absolute;left:3px;top:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:transform .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 3px rgba(0,0,0,.4);}
+.sw input:checked + span{background:var(--pink);} .sw input:checked + span::after{transform:translateX(17px);}
+.sw input:disabled + span{opacity:.4;}
+
+.foot{margin-top:12px;text-align:center;color:var(--dim);font-size:12px;font-weight:600;}
+.fold{display:block;margin:10px auto 0;background:none;border:0;color:var(--muted);font-weight:700;padding:4px 8px;border-radius:6px;}
+.fold:hover{color:var(--text);background:var(--panel2);}
+
+/* settings sheet */
+.scrim{position:fixed;inset:0;background:rgba(2,6,14,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10;}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:470px;margin:0 auto;background:#0b1527;border:1px solid var(--line2);border-bottom:0;border-radius:16px 16px 0 0;padding:16px 16px 18px;
+  transform:translateY(105%);transition:transform .35s cubic-bezier(.22,1,.36,1);z-index:11;box-shadow:0 -10px 40px rgba(0,0,0,.5);}
+.open .scrim{opacity:1;pointer-events:auto;} .open .sheet{transform:none;}
+.sheet h3{margin:0 0 6px;font-size:20px;}
+.srow{display:flex;align-items:center;gap:10px;padding:10px 0;}
+.srow > span{flex:1;font-weight:700;} .srow small{display:block;color:var(--muted);font-weight:600;font-size:12.5px;}
+.adv{border-top:1px solid var(--line);padding-top:8px;}
+.adv summary{cursor:pointer;color:var(--muted);font-weight:700;list-style:none;display:flex;align-items:center;gap:6px;}
+.adv summary::-webkit-details-marker{display:none;}
+.adv summary::before{content:"\203A";display:inline-block;transition:transform .2s;} .adv[open] summary::before{transform:rotate(90deg);}
+.adv .hint{margin:6px 0 0;color:var(--muted);font-weight:600;font-size:12.5px;}
+.field{margin-top:10px;} .field label{display:block;color:var(--muted);font-weight:700;font-size:12.5px;margin-bottom:4px;}
+.field input{width:100%;padding:9px 10px;border-radius:7px;border:1px solid var(--line2);background:rgba(4,9,19,.8);color:var(--text);font:600 14px var(--body);outline:none;}
+.field input:focus{border-color:var(--pink);}
+.sbtns{display:flex;gap:8px;margin-top:14px;} .sbtns .btn{flex:1;}
+.btn.quit{background:transparent;border-color:#5a2236;color:#ff9db3;}
+@media (prefers-reduced-motion:reduce){ *{animation:none !important;transition:none !important;} }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="/logo.png" alt="Team Wars"><h1 class="disp">Live <span>Link</span></h1>
+    <button class="gear" id="gear" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  </header>
+
+  <div class="upd hidden" id="upd"><span id="updText">Update ready</span><button class="btn hot" id="updBtn">Update</button></div>
+
+  <section class="stage wait" id="stage">
+    <div class="lines"></div><div class="glow"></div>
+    <div class="st-top">
+      <div class="beacon"><i></i><i></i><i></i><b></b></div>
+      <div>
+        <span class="badge"><span id="badge">Starting</span></span>
+        <h2 class="st-title disp" id="title">Starting…</h2>
+        <p class="st-sub" id="sub"></p>
+      </div>
+    </div>
+    <div class="dash" id="dash">
+      <div class="spd"><b id="spd">0</b><small>KM/H</small></div>
+      <div class="revs"><div class="seg" id="seg"></div><div class="ped"><span class="t"><i id="thr"></i></span><span class="b"><i id="brk"></i></span></div><div class="lbl"><span>THROTTLE</span><span>BRAKE</span></div></div>
+      <div class="gearbox" id="gear2">N</div>
+    </div>
+    <div class="flowrow" id="flowrow"><span>Forza</span><div class="pipe"></div><span id="dest">Live view</span><span class="rate" id="rate">0/s</span></div>
+  </section>
+
+  <section class="driver hidden" id="driver"><img id="dLogo" alt=""><div class="who"><div class="nm disp" id="dName"></div><div class="tm" id="dTeam"></div></div><button class="ghost" id="change">Change</button></section>
+
+  <section class="ready" id="ready">
+    <div class="rhead"><b class="disp">Getting ready</b><span id="rcount"></span></div>
+    <div class="item" id="i1">
+      <div class="irow"><span class="tick"><span>1</span></span><div class="t" id="i1t">Your team and name<small id="i1s">Pick yourself once</small></div><button class="ghost hidden" id="cancel">Cancel</button></div>
+      <div class="ibody" id="i1b">
+        <div id="pickTeam"><div class="teams" id="teams"></div></div>
+        <div id="pickName" class="hidden">
+          <button class="back" id="back" title="Pick another team"><span aria-hidden="true">&lsaquo;</span><img id="pnLogo" alt=""><span id="pnTeam"></span></button>
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="q" type="text" placeholder="Your name" spellcheck="false" autocomplete="off"></div>
+          <div class="list" id="list" role="listbox"></div>
+        </div>
+      </div>
+    </div>
+    <div class="item" id="i2">
+      <div class="irow"><span class="tick"><span>2</span></span><div class="t">Forza: Data Out<small id="i2s">Three settings in the game</small></div></div>
+      <div class="ibody" id="i2b">
+        <div class="busy hidden" id="busy"><b>Another app is already using port <span id="busyPort">8001</span>.</b><span>Use a different port for the Live Link, and set that same port in Forza (below).</span><button class="btn hot" id="usePort">Use port 8002</button></div>
+        <ol class="steps">
+          <li>In Forza open <span class="path">Settings</span> &rsaquo; <span class="path">HUD and Gameplay</span></li>
+          <li>Scroll down to <span class="path">Data Out</span> and set:</li>
+        </ol>
+        <div class="vals">
+          <span>Data Out</span><b>ON</b><span></span>
+          <span>Data Out IP Address</span><b>127.0.0.1</b><button class="copy" data-copy="127.0.0.1">Copy</button>
+          <span>Data Out IP Port</span><b id="port">8001</b><button class="copy" id="portCopy" data-copy="8001">Copy</button>
+        </div>
+      </div>
+    </div>
+    <div class="item" id="i3">
+      <div class="irow"><span class="tick"><span>3</span></span><div class="t">Race<small id="i3s">You go live by yourself when race control opens one</small></div></div>
+    </div>
+  </section>
+
+  <button class="fold hidden" id="fFold">Show the Forza setup</button>
+  <section class="hidden" id="apps"></section>
+
+  <p class="foot">Closing keeps it running in the tray · <span id="ver"></span></p>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="Settings">
+  <h3 class="disp">Settings</h3>
+  <div class="srow"><span>Start with Windows<small>Ready in the tray for every race</small></span><label class="sw"><input type="checkbox" id="auto"><span></span></label></div>
+  <div class="srow"><span>Show the setup steps<small>To check your Forza settings again</small></span><label class="sw"><input type="checkbox" id="showSetup"><span></span></label></div>
+  <div class="sbtns"><button class="btn" id="closeSheet">Done</button><button class="btn quit" id="quit">Quit Live Link</button></div>
+</div>
+
+<script src="/api/teams" onerror="window.TW_TEAMS=null"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const TEAMS = {}; ((window.TW_TEAMS && window.TW_TEAMS.teams) || []).forEach(t => TEAMS[t.k] = t);
+const logo = k => (TEAMS[k] && TEAMS[k].logo) || "/logo.png";
+let ROSTER = [], S = null, editing = false, team = null, hl = 0, showSetup = false;
+async function api(path, body){ const r = await fetch(path, body ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {}); return r.json(); }
+const show = (el, on) => el.classList.toggle("hidden", !on);
+function setText(el, t){ if(el.textContent !== t) el.textContent = t; }
+$("seg").innerHTML = Array.from({length:14}, (_,i) => '<i class="'+(i>=11?'r':i>=8?'y':'')+'"></i>').join("");
+
+// ---------- team, then name ----------
+async function loadRoster(){
+  try{ ROSTER = (await api("/api/roster")).teams || []; }catch(e){ ROSTER = []; }
+  if(!ROSTER.length){ setTimeout(loadRoster, 4000); return; }
+  $("teams").innerHTML = ROSTER.map(t => '<button class="tile" data-team="'+esc(t.k)+'" title="'+esc(t.name)+'"><img src="'+esc(logo(t.k))+'" alt=""><span>'+esc(t.name)+'</span></button>').join("");
+  draw();
+}
+function members(){ return team ? team.members.slice().sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:"base"})) : []; }
+function drawList(){
+  const v = $("q").value.trim(), lv = v.toLowerCase(), all = members();
+  const hits = lv ? all.filter(n => n.toLowerCase().includes(lv)) : all, exact = all.find(n => n.toLowerCase() === lv);
+  const items = hits.map(n => ({name:n})); if(v.length >= 2 && !exact) items.push({name:v, typed:true});
+  hl = Math.max(0, Math.min(hl, items.length - 1));
+  const mark = n => { if(!lv) return esc(n); const i = n.toLowerCase().indexOf(lv); return i < 0 ? esc(n) : esc(n.slice(0,i)) + "<mark>" + esc(n.slice(i, i+v.length)) + "</mark>" + esc(n.slice(i+v.length)); };
+  $("list").innerHTML = items.length ? items.map((it,i) => it.typed
+      ? '<button class="opt new'+(i===hl?' hl':'')+'" data-i="'+i+'" data-name="'+esc(it.name)+'" role="option"><span class="av">+</span><span>Use <b>'+esc(it.name)+'</b></span></button>'
+      : '<button class="opt'+(i===hl?' hl':'')+'" data-i="'+i+'" data-name="'+esc(it.name)+'" role="option"><span class="av">'+esc(it.name.trim().charAt(0).toUpperCase())+'</span><span>'+mark(it.name)+'</span></button>').join("")
+    : '<div class="empty">Keep typing your name</div>';
+  const cur = $("list").querySelector(".opt.hl"); if(cur) cur.scrollIntoView({block:"nearest"});
+}
+async function choose(name){ if(!team || !name) return; await api("/api/settings", {team: team.k, name}); editing = false; team = null; await refresh(); }
+$("teams").addEventListener("click", e => { const b = e.target.closest("[data-team]"); if(!b) return; team = ROSTER.find(t => t.k === b.dataset.team) || null; editing = true; $("q").value = ""; hl = 0; draw(); drawList(); setTimeout(()=>$("q").focus(), 30); });
+$("back").onclick = () => { team = null; draw(); };
+$("change").onclick = () => { editing = true; team = null; draw(); };
+$("cancel").onclick = () => { editing = false; team = null; draw(); };
+$("q").addEventListener("input", () => { hl = 0; drawList(); });
+$("q").addEventListener("keydown", e => {
+  const opts = [...$("list").querySelectorAll(".opt")];
+  if(e.key === "ArrowDown"){ e.preventDefault(); hl = Math.min(hl+1, opts.length-1); drawList(); }
+  else if(e.key === "ArrowUp"){ e.preventDefault(); hl = Math.max(hl-1, 0); drawList(); }
+  else if(e.key === "Enter"){ e.preventDefault(); const o = opts[hl]; if(o) choose(o.dataset.name); }
+  else if(e.key === "Escape"){ team = null; editing = false; draw(); }
+});
+$("list").addEventListener("mousemove", e => { const o = e.target.closest(".opt"); if(o && +o.dataset.i !== hl){ hl = +o.dataset.i; $("list").querySelectorAll(".opt").forEach(x => x.classList.toggle("hl", x === o)); } });
+$("list").addEventListener("click", e => { const o = e.target.closest(".opt"); if(o) choose(o.dataset.name); });
+
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-copy]"); if(!c) return;
+  navigator.clipboard && navigator.clipboard.writeText(c.dataset.copy).catch(()=>{});
+  c.textContent = "Copied"; c.classList.add("done"); setTimeout(()=>{ c.textContent = "Copy"; c.classList.remove("done"); }, 1400);
+});
+let appsSig = "";
+$("apps").addEventListener("change", e => { const i = e.target.closest("input[data-tool]"); if(i) api("/api/settings", {forward: {[i.dataset.tool]: i.checked}}); });
+
+// ---------- settings ----------
+const sheet = on => { document.body.classList.toggle("open", on); if(on) $("showSetup").checked = showSetup; };
+$("gear").onclick = () => sheet(true); $("scrim").onclick = () => sheet(false); $("closeSheet").onclick = () => sheet(false);
+document.addEventListener("keydown", e => { if(e.key === "Escape") sheet(false); });
+$("auto").onchange = () => api("/api/settings", {autoStart: $("auto").checked});
+$("showSetup").onchange = () => { showSetup = $("showSetup").checked; draw(); };
+$("fFold").onclick = () => { showSetup = !showSetup; draw(); };
+
+$("quit").onclick = async () => { if(confirm("Quit the Live Link? Your car won't show in the live view until you start it again.")){ await api("/api/quit", {}); document.body.innerHTML = '<main><section class="stage bad"><div class="st-top" style="padding-bottom:18px"><div class="beacon"><i></i><b></b></div><div><span class="badge"><span>Stopped</span></span><h2 class="st-title disp">Live Link stopped</h2><p class="st-sub">You can close this window.</p></div></div></section></main>'; } };
+$("usePort").onclick = async () => { const s = S.settings; await api("/api/settings", {listenPort: s.listenPort === 8001 ? 8002 : s.listenPort + 1}); refresh(); };
+$("updBtn").onclick = async () => { $("updBtn").disabled = true; await api("/api/update", {}); };
+
+// ---------- drawing ----------
+function stage(cls, badge, title, sub){
+  const st = $("stage"), want = "stage " + cls;
+  if(st.className.replace(/ ?flow/, "") !== want) st.className = want + (st.classList.contains("flow") ? " flow" : "");
+  setText($("badge"), badge); setText($("title"), title); setText($("sub"), sub || "");
+}
+function draw(){
+  if(!S) return;
+  const s = S.settings, picked = !!(s.team && s.name), forza = !S.listenErr && S.gameRecent;
+  setText($("ver"), "v" + S.version);
+  show($("upd"), !!(S.update || S.updating));
+  if(S.updating){ setText($("updText"), S.updating); show($("updBtn"), /didn't work/.test(S.updating)); $("updBtn").disabled = false; }
+  else if(S.update){ setText($("updText"), "Update ready: v" + S.update); show($("updBtn"), true); }
+  setText($("port"), String(s.listenPort)); $("portCopy").dataset.copy = String(s.listenPort);
+  $("auto").checked = !!s.autoStart; $("auto").disabled = !S.autostartPossible;
+
+  // the stage
+  const live = picked && forza && S.raceOpen && S.ws === "open";
+  if(!picked) stage("wait", "Setup", "Pick your team", "One-time setup, below");
+  else if(S.listenErr) stage("bad", "Port busy", "Can't hear Forza", "Another app is using the port: see step 2");
+  else if(!S.serverOK) stage("bad", "Offline", "No connection", "Check your internet");
+  else if(!forza) stage("wait", "Waiting", "Start Forza", "And turn on Data Out (step 2)");
+  else if(!S.raceOpen) stage("ready", "Ready", "Ready to race", "You go live when race control opens a race");
+  else if(live) stage("live", "Live", "You're live", "Your car is in the live view" + (S.delayMs ? " · " + S.delayMs + " ms" : ""));
+  else stage("wait", "Connecting", "Connecting…", S.wsErr || "");
+  $("stage").classList.toggle("flow", forza);
+  show($("dash"), forza); show($("flowrow"), forza || live);       // the car and the data stream once Forza is sending
+  setText($("dest"), live ? "Live view" : "Live Link");
+  setText($("rate"), (live ? (S.sentRate || 0) : (S.gameRate || 0)) + "/s");
+
+  // the car
+  const t = S.tele || {}, sp = Math.max(0, Math.round(t.speed || 0));
+  setText($("spd"), forza ? String(sp) : "0");
+  const g = t.gear | 0; setText($("gear2"), !forza ? "-" : g === 0 ? "R" : g > 10 ? "N" : String(g));
+  const frac = t.maxRpm > 0 ? Math.max(0, Math.min(1, (t.rpm || 0) / t.maxRpm)) : 0, lit = Math.round(frac * 14);
+  [...$("seg").children].forEach((el, i) => el.classList.toggle("on", forza && i < lit));
+  $("thr").style.width = (forza ? (t.thr || 0) / 2.55 : 0) + "%"; $("brk").style.width = (forza ? (t.brk || 0) / 2.55 : 0) + "%";
+
+  // you
+  show($("driver"), picked && !editing);
+  if(picked){ const tm = ROSTER.find(x => x.k === s.team) || TEAMS[s.team] || {name: s.team.toUpperCase()};
+    $("dLogo").src = logo(s.team); setText($("dName"), s.name); setText($("dTeam"), tm.name || "");
+    $("driver").style.setProperty("--tc", (TEAMS[s.team] && TEAMS[s.team].c1) || "#FF2587"); }
+
+  // getting ready: shown while something still needs doing (or when asked for in the settings)
+  const needs = !picked || editing || !forza || showSetup;
+  show($("ready"), needs);
+  const done1 = picked && !editing, done2 = forza, done3 = live;
+  $("i1").className = "item " + (done1 ? "done" : "now"); $("i2").className = "item " + (done2 ? "done" : done1 ? "now" : ""); $("i3").className = "item " + (done3 ? "done" : "");
+  setText($("rcount"), [done1, done2].filter(Boolean).length + " of 2 done");
+  setText($("i1s"), done1 ? s.name : editing && picked ? "Pick again" : "Pick yourself once");
+  show($("cancel"), editing && picked);
+  show($("i1b"), !done1);
+  show($("pickTeam"), !done1 && !team); show($("pickName"), !done1 && !!team);
+  if(!done1 && team){ $("pnLogo").src = logo(team.k); setText($("pnTeam"), team.name); }
+  if(!done1 && !team) document.querySelectorAll(".tile").forEach(b => b.classList.toggle("on", b.dataset.team === s.team));
+  setText($("i2s"), done2 ? "Connected · " + (S.gameRate || 0) + " a second" : S.listenErr ? "The port is in use" : "Three settings in the game");
+  show($("i2b"), (done1 && !done2) || showSetup || !!S.listenErr);   // only the step you're on is open
+  show($("busy"), !!S.listenErr);
+  if(S.listenErr){ setText($("busyPort"), String(s.listenPort)); setText($("usePort"), "Use port " + (s.listenPort === 8001 ? 8002 : s.listenPort + 1)); }
+  setText($("i3s"), done3 ? "Live" : S.raceOpen ? "Race open: connecting" : "You go live by yourself when race control opens one");
+
+  // the Forza setup is always one click away once you're set up
+  show($("fFold"), picked && !editing && forza);
+  setText($("fFold"), showSetup ? "Hide the Forza setup" : "Show the Forza setup");
+
+  // other apps (only when there are any)
+  const tools = S.tools || [], sig = JSON.stringify(tools.map(x => [x.name, x.port, x.on]));
+  show($("apps"), tools.length > 0);
+  if(sig !== appsSig){ appsSig = sig;
+    $("apps").innerHTML = tools.map(x => '<div class="apps"><div class="t">Also sending to '+esc(x.name)+' <small>port '+x.port+'</small></div><label class="sw"><input type="checkbox" data-tool="'+esc(x.name)+'"'+(x.on?' checked':'')+'><span></span></label></div>').join(""); }
+}
+let timer = null;
+async function refresh(){
+  try{ S = await api("/api/state"); }catch(e){ stage("bad", "Stopped", "Live Link stopped", "Start TW Live Link again"); return; }
+  draw();
+}
+// quick updates while Forza is sending (so the car data moves smoothly), calmer otherwise
+async function loop(){ await refresh(); clearTimeout(timer); timer = setTimeout(loop, S && S.gameRecent ? 120 : 1000); }
+(async () => { await loop(); loadRoster(); })();
+</script>
+</body>
+</html>
